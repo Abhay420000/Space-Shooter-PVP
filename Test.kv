@@ -1,0 +1,84 @@
+RMassets:
+
+#Drag For JoyStick------------------------------------------------------------
+<DragJS>:
+    # Define the properties for the DragJS
+    size_hint:None,None
+    drag_rectangle: self.x, self.y, self.width, self.height
+    drag_timeout: 10000000
+    drag_distance: 0
+#End--------------------------------------------------------------------------
+
+#Image With Rotation and Movement----------------------------------------------
+<RO@Widget>:
+    angle:0
+    pos:100,100
+    size_hint:None,None
+    source:""
+    Image:
+        source:root.source
+        allow_stretch:True
+        keep_ratio:False
+        size:root.size
+        pos:(root.center[0] - self.size[0]/2,root.center[1] - self.size[1]/2)
+        canvas.before:
+            PushMatrix
+            Rotate:
+                angle: root.angle
+                origin: self.center
+        canvas.after:
+            PopMatrix
+#End--------------------------------------------------------------------------
+
+#Joy Stick Back---------------------------------------------------------------
+<JS0@Widget>:
+    size_hint:None,None
+    color1:(1,1,0,1)
+    #size:(100,100)
+    pos:(0,0)
+   
+<Joystick0@JS0>:
+    canvas.before:
+        Color:
+            rgba: root.color1
+        Ellipse:
+            pos: root.pos
+            size: root.size
+#End--------------------------------------------------------------------------
+
+#Main
+<RMassets>:
+	FloatLayout:
+        Button:
+            text: "Fire"
+            pos: root.size[0]*6/8,root.size[1]/6
+            size_hint:None,None
+            size:root.size[0]/8,root.size[0]/8
+            on_press: root.fire()
+
+        Joystick0:
+			id:B1
+			pos:root.size[0]/8,root.size[1]/6#Set Joy Stick Pos
+            size:root.size[0]/8,root.size[0]/8
+			
+		DragJS:
+            id:B2
+            size:B1.size[0]/2, B1.size[1]/2
+			pos:B1.pos[0] + B1.size[0]/2 - B1.size[0]/4, B1.pos[1] + B1.size[1]/2 - B1.size[1]/4
+            color:(1,0,0,1)
+            canvas:
+				Color:
+					rgba:self.color
+				Ellipse:
+					size:self.size
+					pos:self.pos
+            #on_touch_down:root.doit()
+		RO:
+			id:A1
+			angle:0
+			pos:root.size[0]/2 - self.size[0]/2,root.size[1]/2 - self.size[1]/2
+            size:root.size[0]/12,root.size[0]/12
+			source:"./Ship/3.png"
+		
+
+        
