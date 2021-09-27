@@ -1,11 +1,12 @@
 import math
 import threading
 import time
+from os import listdir, path
+from os.path import isfile, join
 
 from kivy.animation import Animation
 from kivy.app import App
 from kivy.clock import Clock
-from kivy.core import window
 from kivy.core.window import Window
 from kivy.graphics.context_instructions import PopMatrix, PushMatrix, Rotate
 from kivy.uix.behaviors import DragBehavior
@@ -14,6 +15,9 @@ from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
 from kivy.core.audio import SoundLoader
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.button import Button
+from kivy.uix.gridlayout import GridLayout
 
 
 class DragJS(DragBehavior, Widget):
@@ -21,7 +25,7 @@ class DragJS(DragBehavior, Widget):
         super().__init__(**kwargs)
         
 
-class RMassets(Widget):
+class RMassets(Screen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -35,6 +39,7 @@ class RMassets(Widget):
         #Loading Sounds
         self.shoot_sound = SoundLoader.load('./Sounds/1.wav')
         self.energy_over_sound = SoundLoader.load('./Sounds/2.wav')
+        print(self.size)
 
         #Setting Energy Level(=>10 bullets at max continuesly)
         self.shots = 10
@@ -43,6 +48,14 @@ class RMassets(Widget):
         Clock.schedule_interval(self.chragenergy,0.5)
         self.s1_size_y = 0
 
+        #Ship and Bullets 
+        self.Bullets = ""
+        self.ids.A1.source= ""
+
+    def on_pre_enter(self):
+        global Ship, Bullets
+        self.ids.A1.source = Ship
+        self.Bullets = Bullets
 
     def ckjoypos(self,_ukt):
         """
@@ -72,6 +85,7 @@ class RMassets(Widget):
         """
             Fire Sound, Fire and Fire Button
         """
+        print(self.Bullets)
         global bullets_widget_garbage,radius,setradius
 
         if self.energy != 0:
@@ -84,7 +98,7 @@ class RMassets(Widget):
                 setradius = 1
 
             
-            bullet = Image(source = "./Shoot/1.png",size_hint = (None,None))
+            bullet = Image(source = self.Bullets,size_hint = (None,None))
             bullet.allow_stretch = True
             bullet.size = (self.size[0]/25,self.size[0]/25)
             bullet.pos = (self.ids.A1.center[0] - bullet.size[0]/2,self.ids.A1.center[1]- bullet.size[1]/2)
@@ -93,7 +107,7 @@ class RMassets(Widget):
                 bullet.rotation = Rotate(angle=self.ids.A1.angle, origin=bullet.center)
             with bullet.canvas.after:
                 PopMatrix()
-            self.add_widget(bullet)
+            self.ids.FB.add_widget(bullet)
 
             #Further these bullets widgets are going to be removed
             bullets_widget_garbage.append(bullet)
@@ -130,6 +144,7 @@ class RMassets(Widget):
 
 
     def stopfire(self):
+        #Charing on after fire and Bullets stop after fire
         self.fireC.cancel()
         self.charge = 1#charging 'on'
     
@@ -141,6 +156,7 @@ class RMassets(Widget):
             self.ids.energy_bar.s1pos[0] = x_eb
 
     def rembullet(self,_ukt):
+        #Removing Bullets which are outside of Game Window
         global bullets_widget_garbage
         #print(bullets_widget_garbage)
         try:
@@ -149,18 +165,153 @@ class RMassets(Widget):
                 self.remove_widget(bullet)
                 bullets_widget_garbage.remove(bullet)
             elif ((bullet.pos[0] - 200) < 0) or ((bullet.pos[1] - 200) < 0):
-                self.remove_widget(bullet)
+                self.ids.FB.remove_widget(bullet)
                 bullets_widget_garbage.remove(bullet)
         except IndexError:
             pass
 
-class TestApp(App):
+class Menu(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        #For-Rotation-Animation
+        Clock.schedule_interval(self.ckjoypos,0.01)
+    
+    def ckjoypos(self,_utk):
+        self.ids.A11.angle += 1
+        if self.ids.A11.angle == 360:
+            self.ids.A11.angle = 0
+    
+    def on_enter(self):
+        global Ship, Bullets
+        self.ids.A11.source = Ship
+        self.ids.BSImg.source = Bullets        
+
+class Settings(Screen):
     pass
+
+class Select_Gun(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.C_L = GridLayout(cols = 4, spacing = 10, size_hint = (None, None), size = (Window.size[0]/2, Window.size[1]))
+        self.C_L.bind(minimum_height = self.C_L.setter('height'))
+        self.mypath = "./Shoot/"
+        onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
+        self.liB = []
+        for i in range(len(onlyfiles)):    
+            self.liB.append(Button(size_hint_y = None, height = 100))
+            self.liB[-1].bind(on_press = self.change)
+            self.C_L.add_widget(self.liB[-1])
+        self.cd = 1
+    def change(self,_utk):
+        global Bullets
+        Bullets = _utk.children[0].source
+    def on_enter(self):
+        if self.cd == 1:
+            onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
+            for j in range(len(self.liB)):
+                fname = self.mypath + onlyfiles[j]
+                img = Image(source = fname,keep_ratio = True)
+                self.liB[j].add_widget(img)
+                img.pos = self.liB[j].pos
+                img.size = self.liB[j].size
+                img.center = self.liB[j].center
+
+            self.ids.SV1.add_widget(self.C_L)
+            self.cd  = 0
+
+        
+
+class Select_Ship(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.C_L = GridLayout(cols = 4, spacing = 10, size_hint = (None, None), size = (Window.size[0]/2, Window.size[1]))
+        self.C_L.bind(minimum_height = self.C_L.setter('height'))
+        self.mypath = "./Ship/"
+        onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
+        self.liB = []
+        for i in range(len(onlyfiles)):    
+            self.liB.append(Button(size_hint_y = None, height = 100))
+            self.liB[-1].bind(on_press = self.change)
+            self.C_L.add_widget(self.liB[-1])
+        self.cd = 1
+
+    def change(self,_utk):
+        global Ship
+        Ship = _utk.children[0].source
+
+    def on_enter(self):
+        if self.cd == 1:
+            onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
+            for j in range(len(self.liB)):
+                fname = self.mypath + onlyfiles[j]
+                img = Image(source = fname,keep_ratio = True)
+                self.liB[j].add_widget(img)
+                img.pos = self.liB[j].pos
+                img.size = self.liB[j].size
+                img.center = self.liB[j].center
+
+            self.ids.SV2.add_widget(self.C_L)
+            self.cd  = 0
+
+class Game_Over(Screen):
+    pass
+
+class Stats(Screen):
+    pass
+
+class About(Screen):
+    pass
+
+class GameMode(Screen):
+    pass
+
+class Club(Screen):
+    pass
+
+class Friends(Screen):
+    pass
+
+class History(Screen):
+    pass
+
+
+class TestApp(App):
+    def build(self):
+        sm = ScreenManager()
+        sm.add_widget(Menu(name = 'M_'))
+        sm.add_widget(RMassets(name = 'P_G_'))
+        sm.add_widget(Select_Gun(name = 'S_G'))
+        sm.add_widget(Select_Ship(name = 'S_S'))
+        sm.add_widget(Settings(name = 'S_'))
+        sm.add_widget(Stats(name = 'STAT'))
+        sm.add_widget(About(name = 'ABT_'))
+        sm.add_widget(Game_Over(name = 'G_O'))
+        sm.add_widget(GameMode(name = 'G_M'))
+        sm.add_widget(Club(name = 'C_B'))
+        sm.add_widget(Friends(name = 'F_S'))
+        sm.add_widget(History(name = 'HIS'))
+        
+        return sm
 
 bullets_widget_garbage = []
 
 setradius = 0
 radius = 0
 seteb = 1
+
+#Global User Attributes
+Ship = ""
+Bullets = ""
+
+#Load User Details(Lite)
+
+with open("User_Data.dat","rb") as User_Data:
+    Data = User_Data.read()
+    Ship = Data.split(b"|||")[1].decode("ascii")
+    Bullets = Data.split(b"|||")[3].decode("ascii")
+    print(Ship,Bullets)
+    del Data
+
 
 TestApp().run()
