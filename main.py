@@ -57,6 +57,24 @@ class RMassets(Screen):
         self.ids.A1.source = Ship
         self.Bullets = Bullets
 
+    def on_enter(self):
+        global setCSize,MJSize,FJSize,setJOri
+        
+        #Setting Up Size of Joysticks if setCSize = 0, setCSize = 1 means "default"
+        if setCSize == str(0):
+            self.ids.B0.size = float(FJSize), float(FJSize)
+            self.ids.B1.size = float(MJSize), float(MJSize)
+
+        #Setting up positions of Joysticks
+        if setJOri == str(1) and self.ids.B1.pos[0] < Window.size[0]/2: 
+            #print(p,self.ids.B1.pos,self.ids.B0.pos)
+            self.ids.B0.pos = Window.size[0]/8,Window.size[1]/6
+            self.ids.B1.pos = Window.size[0]*6/8,Window.size[1]/6
+            #print(p,self.ids.B1.pos,self.ids.B0.pos)
+        if setJOri == str(0) and self.ids.B1.pos[0] < Window.size[0]/2:
+            self.ids.B1.pos = Window.size[0]/8,Window.size[1]/6
+            self.ids.B0.pos = Window.size[0]*6/8,Window.size[1]/6
+
     def ckjoypos(self,_ukt):
         """
             Handles Joystick by not allowing small circle go out of big one.
@@ -134,13 +152,20 @@ class RMassets(Screen):
     
     def startfire(self):
         #print(self.children)
-        global seteb
+        global seteb,setCSize,MJSize,FJSize
         if seteb == 1:
             self.seteb = self.ids.energy_bar.s1size[0]
             seteb = 0
         self.charge = 0#charging 'off'
         self.fire(1)
         self.fireC = Clock.schedule_interval(self.fire,0.15)
+        if setCSize == str(1):
+            #print(setCSize)
+            setCSize = str(0)
+            FJSize = str(self.ids.B0.size[1])
+            MJSize = str(self.ids.B1.size[1])
+            update_User_Data()
+            print(1)
 
 
     def stopfire(self):
@@ -176,36 +201,64 @@ class Menu(Screen):
 
         #For-Rotation-Animation
         Clock.schedule_interval(self.ckjoypos,0.01)
+
+    def on_enter(self):
+        global Ship, Bullets
+        self.ids.A11.source = Ship
+        self.ids.BSImg.source = Bullets 
     
     def ckjoypos(self,_utk):
         self.ids.A11.angle += 1
         if self.ids.A11.angle == 360:
             self.ids.A11.angle = 0
     
-    def on_enter(self):
-        global Ship, Bullets
-        self.ids.A11.source = Ship
-        self.ids.BSImg.source = Bullets        
+           
 
 class Settings(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        global Audio,Sound
+        self.ids.SAOF.text = "Audio:"+Audio
+        self.ids.SSOF.text = "Sound:"+Sound
+        
+
+    def setaudio_OF(self):
+        global Audio
+        if self.ids.SAOF.text.split(':')[1] == "On":
+            self.ids.SAOF.text = "Audio:Off"
+            Audio = "Off"
+        else:
+            self.ids.SAOF.text = "Audio:On"
+            Audio = "On"
+        #print(Audio)
+        update_User_Data()
+
+    def setsound_OF(self):
+        global Sound
+        if self.ids.SSOF.text.split(':')[1] == "On":
+            self.ids.SSOF.text = "Sound:Off"
+            Sound = "Off"
+        else:
+            self.ids.SSOF.text = "Sound:On"
+            Sound = "On"
+        #print(Sound)
+        update_User_Data()      
 
 class Select_Gun(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.C_L = GridLayout(cols = 4, spacing = 10, size_hint = (None, None), size = (Window.size[0]/2, Window.size[1]))
+        self.C_L = GridLayout(cols = 4, spacing = 0, size_hint = (None, None), size = (Window.size[0]/2, Window.size[1]))
         self.C_L.bind(minimum_height = self.C_L.setter('height'))
         self.mypath = "./Shoot/"
         onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
         self.liB = []
+        
         for i in range(len(onlyfiles)):    
-            self.liB.append(Button(size_hint_y = None, height = 100))
+            self.liB.append(Button(size_hint_y = None, size_hint_x = None,width =  Window.size[0]/8, height = Window.size[0]/8))
             self.liB[-1].bind(on_press = self.change)
             self.C_L.add_widget(self.liB[-1])
         self.cd = 1
-    def change(self,_utk):
-        global Bullets
-        Bullets = _utk.children[0].source
+
     def on_enter(self):
         if self.cd == 1:
             onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
@@ -220,25 +273,32 @@ class Select_Gun(Screen):
             self.ids.SV1.add_widget(self.C_L)
             self.cd  = 0
 
+    def change(self,_utk):
+        """
+            Event Binded with all Buttons get fired when button pressed
+        """
+        global Bullets
+        Bullets = _utk.children[0].source
+    
+
+    def on_leave(self):
+        update_User_Data()
+
         
 
 class Select_Ship(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.C_L = GridLayout(cols = 4, spacing = 10, size_hint = (None, None), size = (Window.size[0]/2, Window.size[1]))
+        self.C_L = GridLayout(cols = 4, spacing = 0, size_hint = (None, None), size = (Window.size[0]/2, Window.size[1]))
         self.C_L.bind(minimum_height = self.C_L.setter('height'))
         self.mypath = "./Ship/"
         onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
         self.liB = []
         for i in range(len(onlyfiles)):    
-            self.liB.append(Button(size_hint_y = None, height = 100))
+            self.liB.append(Button(size_hint_y = None, size_hint_x = None,width =  Window.size[0]/8, height = Window.size[0]/8))
             self.liB[-1].bind(on_press = self.change)
             self.C_L.add_widget(self.liB[-1])
         self.cd = 1
-
-    def change(self,_utk):
-        global Ship
-        Ship = _utk.children[0].source
 
     def on_enter(self):
         if self.cd == 1:
@@ -253,6 +313,16 @@ class Select_Ship(Screen):
 
             self.ids.SV2.add_widget(self.C_L)
             self.cd  = 0
+    
+    def change(self,_utk):
+        """
+            Event Binded with all Buttons get fired when button pressed
+        """
+        global Ship
+        Ship = _utk.children[0].source
+
+    def on_leave(self):
+        update_User_Data()
 
 class Game_Over(Screen):
     pass
@@ -275,9 +345,96 @@ class Friends(Screen):
 class History(Screen):
     pass
 
+class CUpdate(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    def on_enter(self):
+        """
+            Setting Sider's value, Joy Stick Sizes after just entering
+            and Swaping Joystick Sizes
+        """
+        global MJSize,FJSize,setJOri
+        self.ids.slider0.value = float(MJSize)
+        self.ids.slider1.value = float(FJSize)
+        self.ids.MJI.size1 = (float(MJSize), float(MJSize))
+        self.ids.FJI.size2 = (float(FJSize), float(FJSize))
+
+        if setJOri == str(1):
+            s = self.ids.PL.children[0]
+            if s.pos == self.ids.FJI.pos:
+                self.ids.PL.children[0] = self.ids.PL.children[1]
+                self.ids.PL.children[1] = s
+                s = self.ids.PL.children[2]
+                self.ids.PL.children[2] = self.ids.PL.children[3]
+                self.ids.PL.children[3] = s
+                s = self.ids.PL.children[4]
+                self.ids.PL.children[4] = self.ids.PL.children[5]
+                self.ids.PL.children[5] = s
+
+    def incMJS(self):
+        """
+            Change Movement Joystick Size
+        """
+        global MJSize
+        MJSize = str(self.ids.slider0.value)#Updating
+        self.ids.MJI.size1 = (float(MJSize), float(MJSize))
+
+    def incFJS(self):
+        """
+            Change Fire Joystick Size
+        """
+        global FJSize
+        FJSize = str(self.ids.slider1.value)#Updating
+        self.ids.FJI.size2 = (float(FJSize), float(FJSize))
+    
+    def swapit(self):
+        """
+        Swaping Root Widget Right Side Childeren to Left Side Ones
+        """
+        global setJOri
+        s = self.ids.PL.children[0]
+        self.ids.PL.children[0] = self.ids.PL.children[1]
+        self.ids.PL.children[1] = s
+        s = self.ids.PL.children[2]
+        self.ids.PL.children[2] = self.ids.PL.children[3]
+        self.ids.PL.children[3] = s
+        s = self.ids.PL.children[4]
+        self.ids.PL.children[4] = self.ids.PL.children[5]
+        self.ids.PL.children[5] = s
+
+        if int(self.ids.MJI.pos[0]) == 0:
+            setJOri = str(1)
+        else:
+            setJOri = str(0)
+        print(setJOri)
+        update_User_Data()
+
+
+    def on_leave(self):
+        global setCSize
+        if setCSize == str(1):
+            """For the frist time if user change its controls just after instaling game
+            Without Playing"""
+            setCSize = str(0)
+            update_User_Data()
+        else:
+            update_User_Data()
+
+
+def update_User_Data():
+    """
+        Used to update user details.
+        Called whenever user's game details changed by him.
+    """
+    global Audio,Ship,Bullets,Sound,MJSize,FJSize,setCSize,setJOri
+    UDW = open("User_Data.dat","wb")
+    UDW.write(f'Ship|||{Ship}|||Bullets|||{Bullets}|||Audio|||{Audio}|||Sound|||{Sound}|||MJSize|||{MJSize}|||FJSize|||{FJSize}|||setCSize|||{setCSize}|||setJOri|||{setJOri}'.encode())
+    UDW.close()
 
 class TestApp(App):
     def build(self):
+
         sm = ScreenManager()
         sm.add_widget(Menu(name = 'M_'))
         sm.add_widget(RMassets(name = 'P_G_'))
@@ -291,9 +448,11 @@ class TestApp(App):
         sm.add_widget(Club(name = 'C_B'))
         sm.add_widget(Friends(name = 'F_S'))
         sm.add_widget(History(name = 'HIS'))
+        sm.add_widget(CUpdate(name = 'CUP'))
         
         return sm
 
+#used for collecting garbage bullets that goes out of screen
 bullets_widget_garbage = []
 
 setradius = 0
@@ -303,15 +462,27 @@ seteb = 1
 #Global User Attributes
 Ship = ""
 Bullets = ""
+Audio = ""
+Sound = ""
+MJSize = ""
+FJSize = ""
+setCSize = ""
+setJOri = ""
 
 #Load User Details(Lite)
-
 with open("User_Data.dat","rb") as User_Data:
-    Data = User_Data.read()
-    Ship = Data.split(b"|||")[1].decode("ascii")
-    Bullets = Data.split(b"|||")[3].decode("ascii")
-    print(Ship,Bullets)
-    del Data
+    Data = User_Data.read().decode("ascii").split("|||")
+
+    Ship = Data[1]
+    Bullets = Data[3]
+    Audio = Data[5]
+    Sound = Data[7]
+    MJSize = Data[9]
+    FJSize = Data[11]
+    setCSize = Data[13]
+    setJOri = Data[15]
+    
+    del Data#No neeed of Data
 
 
 TestApp().run()

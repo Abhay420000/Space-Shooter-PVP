@@ -93,6 +93,7 @@
                 s1size:(self.size[0]*22)/25,(self.size[1]*3)/5
                 s1pos:self.pos[0] + (self.s1size[0]*1.69)/25, self.pos[1] + (self.s1size[1]*1.665)/5
             Button:
+                id:B0
                 text: "Fire"
                 pos: root.size[0]*6/8,root.size[1]/6
                 size_hint:None,None
@@ -265,4 +266,117 @@
 <Stats>:
 
 <Settings>:
+    Label:
+        id: Set_
+        text: "Settings"
+        size_hint: (1, 0.1)
+        pos: (0,root.size[1]-self.size[1])
+    Button:
+        text:"<-"
+        size_hint: (None,0.1)
+        pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
+        on_press: root.manager.current = 'M_'
+    FloatLayout:
+        pos_hint: {'x':0.2, 'y':0.2}
+        size_hint: 0.6,0.6
+        canvas:
+            Color:
+                rgba: 0.8, 0.2, 0.3, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        BoxLayout:
+            pos_hint: {'x':0.3, 'y':0.2}
+            size_hint: 0.4,0.6
+            orientation:"vertical"
+            Button:
+                text: "Audio:On"
+                id:SAOF
+                on_press: root.setaudio_OF()
+            Button:
+                text: "Sound:Off"
+                id: SSOF
+                on_press: root.setsound_OF()
+            Button:
+                text: "Controls"
+                on_press: root.manager.current = 'CUP'
+            Button:
+                text: "Feedback"
+            Button:
+                text: "About"
+
+<CUpdate>:
+    Label:
+        id: Set_
+        text: "Settings"
+        size_hint: (1, 0.1)
+        pos: (0,root.size[1]-self.size[1])
+    Button:
+        text:"<-"
+        size_hint: (None,0.1)
+        pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
+        on_press: root.manager.current = 'M_'
+    Button:
+        text: "Swap Sides"
+        size_hint: (0.2,0.1)
+        pos: root.size[0]/2 - self.size[0]/2, Set_.pos[1] - self.size[1]
+        on_press: root.swapit()
+    GridLayout:
+        id: PL
+        cols:2
+        size_hint: (1,0.8)
+        pos: (0,0)
+        Label:
+            id: MCL
+            text: "Movement Controler Size"
+            size_hint: (1,0.2)
+        Label:
+            id: FBL
+            text: "Fire Button Size"
+            size_hint: (1,0.2)
+        Slider:
+            id: slider0
+            min: slider1.size[1]
+            max: slider1.size[1]*5
+            step: 1
+            orientation: 'horizontal'
+            size_hint: (1,0.2)
+            on_touch_move: root.incMJS()
+        Slider:
+            id: slider1
+            min: slider1.size[1]
+            max: slider1.size[1]*5
+            step: 1
+            orientation: 'horizontal'
+            size_hint: (1,0.2)
+            on_touch_move: root.incFJS()
+        FloatLayout:
+            id: MJI
+            size: slider1.size[0], slider1.size[1]*5
+            pos: (0,0)
+            size1: (100,100)
+            canvas.before:
+                Color:
+                    rgb: (1,1,0)
+                Ellipse:
+                    pos: MJI.center[0] - self.size1[0]/2, MJI.center[1] - self.size1[1]/2
+                    size: self.size1
+                Color:
+                    rgb: (1,0,1)
+                Ellipse:
+                    pos: MJI.center[0] - MJI.size1[0]/4, MJI.center[1] - MJI.size1[1]/4
+                    size: MJI.size1[0]/2, MJI.size1[1]/2
+
+        FloatLayout:
+            id: FJI
+            pos: (root.size[0]/2, 0)
+            size: slider1.size[0], slider1.size[1]*5
+            size2: (100,100)
+            Button:
+                text: "Fire"
+                pos: FJI.center[0] - FJI.size2[0]/2, FJI.center[1] - FJI.size2[1]/2
+                size_hint: (None, None)
+                disabled: True
+                size: FJI.size2
+
 
