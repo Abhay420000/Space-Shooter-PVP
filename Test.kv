@@ -130,10 +130,28 @@
         pos:(0,0)
     BoxLayout:
         orientation:"horizontal"
+        size_hint: (0.2,0.1)
+        pos:(0, root.height - self.size[1])
+        #border:10
+        spacing:0
+        Button:
+            id:BI1
+            size_hint:(None,1)
+            width:self.size[1]
+            Image:
+                #center:BI1.center
+                size: BI1.size[1]*90/100,BI1.size[1]*90/100
+                pos:BI1.pos[0] + BI1.size[1]*10/200, BI1.pos[1] + BI1.size[1]*10/200
+        Button:
+            text:"Astro123"
+            size: BI1.size[1],BI1.size[1]
+
+    BoxLayout:
+        orientation:"horizontal"
         BoxLayout:
             orientation:"vertical"
             Label:
-                text:"LOGO"
+                
                 
             Button:
                 text:"Bullets"
@@ -152,12 +170,10 @@
                 size_hint:(1,0.5)
                 on_press:root.manager.current = 'S_'
             Label:
-                text:"LOGO"
                 
         BoxLayout:
             orientation:"vertical"
             Label:
-                text:"Space Shooter"
                 size_hint:(1,0.5)
             RO:
                 id:A11
@@ -183,12 +199,7 @@
         BoxLayout:
             orientation:"vertical"
             Label:
-                text:"LOGO"
                 
-            Button:
-                text:"Game Mode"
-                size_hint:(1,0.5)
-                on_press:root.manager.current = 'G_M'
             Button:
                 text:"Club"
                 size_hint:(1,0.5)
@@ -201,8 +212,13 @@
                 text:"History"
                 size_hint:(1,0.5)
                 on_press:root.manager.current = 'HIS'
+            
+            Button:
+                text:"Game Mode"
+                size_hint:(1,0.5)
+                on_press:root.manager.current = 'G_M'
             Label:
-                text:"LOGO"
+                
                 size_hint:(1,0.5)
             Button:
                 text:"Start"
@@ -217,7 +233,7 @@
         pos: (0,root.size[1]-self.size[1])
     Button:
         text:"<-"
-        size_hint: (None,0.1)
+        size_hint: (0.1,0.1)
         pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
         on_press: root.manager.current = 'M_'
 
@@ -243,7 +259,7 @@
         pos: (0,root.size[1]-self.size[1])
     Button:
         text:"<-"
-        size_hint: (None,0.1)
+        size_hint: (0.1,0.1)
         pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
         on_press: root.manager.current = 'M_'
 
@@ -273,7 +289,7 @@
         pos: (0,root.size[1]-self.size[1])
     Button:
         text:"<-"
-        size_hint: (None,0.1)
+        size_hint: (0.1,0.1)
         pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
         on_press: root.manager.current = 'M_'
     FloatLayout:
@@ -312,11 +328,13 @@
         size_hint: (1, 0.1)
         pos: (0,root.size[1]-self.size[1])
     Button:
+        id: hpg
         text:"<-"
-        size_hint: (None,0.1)
+        size_hint: (0.1,0.1)
         pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
         on_press: root.manager.current = 'M_'
     Button:
+        id: SPit
         text: "Swap Sides"
         size_hint: (0.2,0.1)
         pos: root.size[0]/2 - self.size[0]/2, Set_.pos[1] - self.size[1]

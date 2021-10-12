@@ -1,0 +1,5 @@
+1.Server side Database
+2.UDP on gameplay
+3.TCP all the time
+	Records user is on which page.
+	Fetch the details from database to user.
