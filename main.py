@@ -20,7 +20,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.graphics import Rectangle, Color, RoundedRectangle
-
+from kivy.properties import StringProperty
 
 class DragJS(DragBehavior, Widget):
     def __init__(self, **kwargs):
@@ -93,7 +93,7 @@ class RMassets(Screen):
         radius = self.ids.B1.size[1]/2
         
         self.angle1 = Vector(x22, y22).angle((self.ids.B1.size[0]/2, 0))
-        self.ids.A1.angle = -(90 - self.angle1)
+        self.ids.A1.angle = - (90 - self.angle1)
 
         if dist > radius:
             pcx = radius*(math.cos(self.angle1*(math.pi/180))) + x1
@@ -104,7 +104,6 @@ class RMassets(Screen):
         """
             Fire Sound, Fire and Fire Button
         """
-        print(self.Bullets)
         global bullets_widget_garbage, radius, setradius
 
         if self.energy != 0:
@@ -197,16 +196,26 @@ class RMassets(Screen):
             pass
 
 class Menu(Screen):
+    
     def __init__(self, **kwargs):
+
+        global GMode
+
         super().__init__(**kwargs)
 
         #For-Rotation-Animation
         Clock.schedule_interval(self.ckjoypos, 0.01)
 
+        #For-Game-Mode-Display
+        self.ids.GMD.text = GMode
+
     def on_enter(self):
-        global Ship, Bullets
+        global Ship, Bullets, GMode
+
         self.ids.A11.source = Ship
-        self.ids.BSImg.source = Bullets 
+        self.ids.BSImg.source = Bullets
+        self.ids.GMD.text = GMode
+
     
     def ckjoypos(self, _utk):
         self.ids.A11.angle += 1
@@ -218,7 +227,7 @@ class Menu(Screen):
 class Settings(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        global Audio,Sound
+        global Audio, Sound
         self.ids.SAOF.text = "Audio:" + Audio
         self.ids.SSOF.text = "Sound:" + Sound
         
@@ -335,7 +344,20 @@ class About(Screen):
     pass
 
 class GameMode(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super(GameMode, self).__init__(**kwargs)
+        Window.bind(on_keyboard = self.Android_back_click)
+
+    def Android_back_click(self, window, key, *largs):
+        if key == 27:
+            self.manager.current = 'M_'
+    
+    def change_mode(self, mode):
+        global GMode
+        GMode = mode
+    
+    def on_leave(self):
+        update_User_Data()
 
 class Club(Screen):
     pass
@@ -344,7 +366,53 @@ class Friends(Screen):
     pass
 
 class History(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    def on_pre_enter(self):
+        #Adding Loading Widget
+        self.Loading = Lding()
+        self.add_widget(self.Loading)
+
+        #Starting Loading
+        self.Loading.incbyoneone(15,0.05)
+
+    def on_enter(self):
+        #Adding Table Note-Size Control while resize needs to be added
+        self.gd = GridLayout(cols = 5, size_hint = (None, None), size = self.ids.SV2.size)
+        
+        with open('Replay_Data.dat', "rb") as rd:
+            self.Data = rd.read()
+        self.Data = self.Data.split(b"\r\n")
+        while b"" in self.Data:
+            self.Data.remove(b"")
+        self.cd = len(self.Data)
+
+        self.s = Clock.schedule_interval(self.load,0.001)
+    
+    def load(self, _utk):
+        #print(self.cd - len(self.Data) - 1)
+        if self.cd != 0:
+            DR = self.Data[self.cd - len(self.Data) - 1].decode()
+            DR = DR.split('|||')
+            self.gd.add_widget(Label(text = DR[0], size_hint= (None, None), size = (self.gd.size[0]/5, self.gd.size[1]/4)))
+            self.gd.add_widget(Label(text = DR[1], size_hint= (None, None), size = (self.gd.size[0]/5, self.gd.size[1]/4)))
+            self.gd.add_widget(Label(text = DR[2], size_hint= (None, None), size = (self.gd.size[0]/5, self.gd.size[1]/4)))
+            self.gd.add_widget(Label(text = DR[3], size_hint= (None, None), size = (self.gd.size[0]/5, self.gd.size[1]/4)))
+            self.gd.add_widget(Button(text = "Play", size_hint= (None, None), size = (self.gd.size[0]/5, self.gd.size[1]/4)))
+            self.cd -= 1
+        if self.cd == 0:
+            self.Loading.incrementLoading(80)
+            self.ids.SV2.add_widget(self.gd)
+            self.gd.bind(minimum_height = self.gd.setter('height'))
+            #Loading Ended Removing Loading Widget
+            self.Loading.incrementLoading(100)
+            self.remove_widget(self.Loading)
+            self.s.cancel()
+
+    def on_leave(self):
+        self.gd.clear_widgets()
+        self.ids.SV2.clear_widgets()
 
 class CUpdate(Screen):
     def __init__(self, **kwargs):
@@ -359,7 +427,7 @@ class CUpdate(Screen):
             Setting Sider's value, Joy Stick Sizes after just entering
             and Swaping Joystick Sizes
         """
-        self.LoadingAnim.incbyoneone(10,0.001)#Starting Loading
+        self.LoadingAnim.incbyoneone(10, 0.001)#Starting Loading
         #Disabling Buttons while Loading
         self.ids.hpg.disabled = True
         self.ids.SPit.disabled = True
@@ -443,36 +511,6 @@ class CUpdate(Screen):
             update_User_Data()
 
 
-def update_User_Data():
-    """
-        Used to update user details.
-        Called whenever user's game details changed by him.
-    """
-    global Audio, Ship, Bullets, Sound, MJSize, FJSize, setCSize, setJOri
-    UDW = open("User_Data.dat", "wb")
-    UDW.write(f'Ship|||{Ship}|||Bullets|||{Bullets}|||Audio|||{Audio}|||Sound|||{Sound}|||MJSize|||{MJSize}|||FJSize|||{FJSize}|||setCSize|||{setCSize}|||setJOri|||{setJOri}'.encode())
-    UDW.close()
-
-class TestApp(App):
-    def build(self):
-
-        sm = ScreenManager(transition=NoTransition())
-        sm.add_widget(Menu(name = 'M_'))
-        sm.add_widget(RMassets(name = 'P_G_'))
-        sm.add_widget(Select_Gun(name = 'S_G'))
-        sm.add_widget(Select_Ship(name = 'S_S'))
-        sm.add_widget(Settings(name = 'S_'))
-        sm.add_widget(Stats(name = 'STAT'))
-        sm.add_widget(About(name = 'ABT_'))
-        sm.add_widget(Game_Over(name = 'G_O'))
-        sm.add_widget(GameMode(name = 'G_M'))
-        sm.add_widget(Club(name = 'C_B'))
-        sm.add_widget(Friends(name = 'F_S'))
-        sm.add_widget(History(name = 'HIS'))
-        sm.add_widget(CUpdate(name = 'CUP'))
-        
-        return sm
-
 #Loading Widget
 class Lding(Widget):
     def __init__(self, **kwargs):
@@ -485,12 +523,12 @@ class Lding(Widget):
             self.rect = Rectangle(pos = self.center,
                                   size =(self.width / 2., self.height / 2.))
             Color(1, 1, 0, 1)#Loading Back Color
-            self.s1 = RoundedRectangle(pos = (Window.size[0]/1000,Window.size[1]/1000),
-                                       size = (Window.size[0] - Window.size[0]/1000,Window.size[1]/20))
+            self.s1 = RoundedRectangle(pos = (Window.size[0]/1000, Window.size[1]/1000),
+                                       size = (Window.size[0] - Window.size[0]/1000, Window.size[1]/20))
             
             Color(1,0,1,1)#Loading Front Color
             self.s2 = RoundedRectangle(pos = (Window.size[0]/1000, Window.size[1]/1000 + self.s1.size[1]/20),
-                                       size = (self.loading_value,Window.size[1]/20 - self.s1.size[1]/10))
+                                       size = (self.loading_value, Window.size[1]/20 - self.s1.size[1]/10))
 
             # Update the canvas as the screen size change
             self.bind(pos = self.update_rect, size = self.update_rect)
@@ -505,15 +543,15 @@ class Lding(Widget):
     def update_rect(self, *args):
         self.rect.pos = self.pos
         self.rect.size = self.size
-        self.s1.pos = (Window.size[0]/1000,Window.size[1]/1000)
-        self.s1.size = (Window.size[0] - Window.size[0]/1000,Window.size[1]/20)
+        self.s1.pos = (Window.size[0]/1000, Window.size[1]/1000)
+        self.s1.size = (Window.size[0] - Window.size[0]/1000, Window.size[1]/20)
         self.s2.pos = (Window.size[0]/1000, Window.size[1]/1000 + self.s1.size[1]/20)
         self.s2.size = (self.loading_value, Window.size[1]/20 - self.s1.size[1]/10)
         self.L1.pos = (Window.center[0] - self.L1.size[0]/2, Window.size[1]/20)
         self.L1.size = (Window.size[0]*0.1, Window.size[0]*0.05)
 
     
-    def incrementLoading(self,n):
+    def incrementLoading(self, n):
         """
             Used to assign the size of Loading bar.
         
@@ -528,17 +566,17 @@ class Lding(Widget):
             self.loading_value = Window.size[0] - Window.size[0]/1000
             self.s2.size = (Window.size[0] - Window.size[0]/1000, self.s2.size[1])
     
-    def incbyoneone(self,value,time):
+    def incbyoneone(self, value, time):
         """
             Used to increment the size of loading bar in interval.
 
             value = incrementing value in pixels
             time = incrementing interval
         """
-        self.i1 = Clock.schedule_interval(self.incSz1,time)
+        self.i1 = Clock.schedule_interval(self.incSz1, time)
         self.value = value
     
-    def incSz1(self,_utk):
+    def incSz1(self, _utk):
         if self.s2.size[0]+self.value < Window.size[0] - Window.size[0]/1000:
             self.loading_value = self.s2.size[0] + self.value
             self.s2.size = (self.s2.size[0] + self.value, self.s2.size[1])
@@ -548,7 +586,36 @@ class Lding(Widget):
             self.loading_value = Window.size[0] - Window.size[0]/1000
             self.s2.size = (Window.size[0] - Window.size[0]/1000, self.s2.size[1])
 
-  
+
+def update_User_Data():
+    """
+        Used to update user details.
+        Called whenever user's game details changed by him.
+    """
+    global Audio, Ship, Bullets, Sound, MJSize, FJSize, setCSize, setJOri, GMode
+    UDW = open("User_Data.dat", "wb")
+    UDW.write(f'Ship|||{Ship}|||Bullets|||{Bullets}|||Audio|||{Audio}|||Sound|||{Sound}|||MJSize|||{MJSize}|||FJSize|||{FJSize}|||setCSize|||{setCSize}|||setJOri|||{setJOri}|||GMode|||{GMode}'.encode())
+    UDW.close()
+
+class TestApp(App):
+    def build(self):
+
+        sm = ScreenManager(transition = NoTransition())
+        sm.add_widget(Menu(name = 'M_'))
+        sm.add_widget(RMassets(name = 'P_G_'))
+        sm.add_widget(Select_Gun(name = 'S_G'))
+        sm.add_widget(Select_Ship(name = 'S_S'))
+        sm.add_widget(Settings(name = 'S_'))
+        sm.add_widget(Stats(name = 'STAT'))
+        sm.add_widget(About(name = 'ABT_'))
+        sm.add_widget(Game_Over(name = 'G_O'))
+        sm.add_widget(GameMode(name = 'G_M'))
+        sm.add_widget(Club(name = 'C_B'))
+        sm.add_widget(Friends(name = 'F_S'))
+        sm.add_widget(History(name = 'HIS'))
+        sm.add_widget(CUpdate(name = 'CUP'))
+        
+        return sm  
 
 #used for collecting garbage bullets that goes out of screen
 bullets_widget_garbage = []
@@ -566,6 +633,7 @@ MJSize = ""
 FJSize = ""
 setCSize = ""
 setJOri = ""
+GMode = ""
 
 #Load User Details(Lite)
 with open("User_Data.dat","rb") as User_Data:
@@ -579,6 +647,7 @@ with open("User_Data.dat","rb") as User_Data:
     FJSize = Data[11]
     setCSize = Data[13]
     setJOri = Data[15]
+    GMode = Data[17]
     
     del Data#No neeed of Data
 

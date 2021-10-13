@@ -218,7 +218,8 @@
                 size_hint:(1,0.5)
                 on_press:root.manager.current = 'G_M'
             Label:
-                
+                id:GMD
+                text:""
                 size_hint:(1,0.5)
             Button:
                 text:"Start"
@@ -398,3 +399,69 @@
                 size: FJI.size2
 
 
+<GameMode>:
+    Label:
+        text: "Select Game Mode"
+        size_hint: (1, 0.1)
+        pos: (0,root.size[1]-self.size[1])
+    Button:
+        text:"<-"
+        size_hint: (0.1,0.1)
+        pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
+        on_press: root.manager.current = 'M_'
+    FloatLayout:
+        GridLayout:
+            cols: 2
+            size_hint: (0.6, 0.6)
+            pos_hint: {'x':0.2, 'y':0.2}
+            Button:
+                text: "Solo"
+                on_press: root.change_mode(self.text)
+            Button:
+                text: "Duo"
+                on_press: root.change_mode(self.text)
+            Button:
+                text: ""
+                on_press: root.change_mode(self.text)
+            Button:
+                text: ""
+                on_press: root.change_mode(self.text)
+            Button:
+                text: ""
+                on_press: root.change_mode(self.text)
+            Button:
+                text: ""
+                on_press: root.change_mode(self.text)
+
+<History>:
+    Label:
+        text: "History"
+        size_hint: (1, 0.1)
+        pos: (0,root.size[1]-self.size[1])
+    Button:
+        text:"<-"
+        size_hint: (0.1,0.1)
+        pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
+        on_press: root.manager.current = 'M_'
+    FloatLayout:
+        BoxLayout:
+            orientation:"vertical"
+            size_hint: (0.7, 0.7)
+            pos_hint: {'x':0.15, 'y':0.15}
+            BoxLayout:
+                orientation:"horizontal"
+                size_hint_y: 0.125
+                Button:
+                    text:"Mode"
+                Button:
+                    text:"Rank"
+                Button:
+                    text:"Reward"
+                Button:
+                    text:"Time"
+                Button:
+                    text:"Replay"
+            ScrollView:
+                id: SV2
+                do_scroll_x: False
+                do_scroll_y: True
