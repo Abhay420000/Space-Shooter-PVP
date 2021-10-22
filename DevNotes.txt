@@ -6,5 +6,8 @@ User_Data.dat = Binary File
 	
 	setJOri = 0 =>Movement Joystick at Left and Fire at Right
 	setJOri = 1 =>Movement Joystick at Right and Fire at Left
-	
+
+Avg. Damage = 1000
+Avg. Health = 5000
+Max Range = 4cm
 	

@@ -117,7 +117,8 @@
                     Ellipse:
                         size:self.size
                         pos:self.pos
-                #on_touch_down:root.doit()
+
+                    
             
 <Menu>:
     Widget:
@@ -247,8 +248,9 @@
             do_scroll_x: False
             do_scroll_y: True
                 
-        Button:
-            on_press: root.doit()
+        BoxLayout:
+            id:Prev_It
+            orientation:"vertical"
     
                 
 
@@ -273,18 +275,38 @@
             do_scroll_x: False
             do_scroll_y: True
                 
-        Button:
-            on_press: root.doit()
+        BoxLayout:
+            id:Prev_It
+            orientation:"vertical"
 
 <Game_Over>:
 
 <About>:
+    Label:
+        id: Set_
+        text: "About"
+        size_hint: (1, 0.1)
+        pos: (0,root.size[1]-self.size[1])
+    Button:
+        text:"<-"
+        size_hint: (0.1,0.1)
+        pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
+        on_press: root.manager.current = 'M_'
 
 <Stats>:
+    Label:
+        id: Set_
+        text: "Stats"
+        size_hint: (1, 0.1)
+        pos: (0,root.size[1]-self.size[1])
+    Button:
+        text:"<-"
+        size_hint: (0.1,0.1)
+        pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
+        on_press: root.manager.current = 'M_'
 
 <Settings>:
     Label:
-        id: Set_
         text: "Settings"
         size_hint: (1, 0.1)
         pos: (0,root.size[1]-self.size[1])
@@ -465,3 +487,25 @@
                 id: SV2
                 do_scroll_x: False
                 do_scroll_y: True
+
+<Friends>:
+    Label:
+        text: "Friends"
+        size_hint: (1, 0.1)
+        pos: (0,root.size[1]-self.size[1])
+    Button:
+        text:"<-"
+        size_hint: (0.1,0.1)
+        pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
+        on_press: root.manager.current = 'M_'
+
+<Club>:
+    Label:
+        text: "Club"
+        size_hint: (1, 0.1)
+        pos: (0,root.size[1]-self.size[1])
+    Button:
+        text:"<-"
+        size_hint: (0.1,0.1)
+        pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
+        on_press: root.manager.current = 'M_'

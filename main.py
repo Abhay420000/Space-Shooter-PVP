@@ -3,6 +3,7 @@ import threading
 import time
 from os import listdir, path
 from os.path import isfile, join
+import socket
 
 from kivy.animation import Animation
 from kivy.app import App
@@ -19,8 +20,10 @@ from kivy.core.audio import SoundLoader
 from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Rectangle, Color, RoundedRectangle
 from kivy.properties import StringProperty
+from kivy.uix.behaviors import ButtonBehavior
 
 class DragJS(DragBehavior, Widget):
     def __init__(self, **kwargs):
@@ -32,8 +35,7 @@ class RMassets(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        #For Movement-JoyStick
-        Clock.schedule_interval(self.ckjoypos, 0.01)
+        Clock.schedule_interval(self.ckjoypos, 0.1)
 
         #For Removal of Waste Widgets
         Clock.schedule_interval(self.rembullet, 0.2)
@@ -195,6 +197,15 @@ class RMassets(Screen):
         except IndexError:
             pass
 
+    def on_touch_down(self, touch):
+        if self.ids.B2.collide_point(*touch.pos):
+            print("On")
+        return super(RMassets, self).on_touch_down(touch)
+    def on_touch_up(self, touch):
+        if self.ids.B2.collide_point(*touch.pos):
+            print("Off")
+        return super(RMassets, self).on_touch_up(touch)
+
 class Menu(Screen):
     
     def __init__(self, **kwargs):
@@ -230,7 +241,12 @@ class Settings(Screen):
         global Audio, Sound
         self.ids.SAOF.text = "Audio:" + Audio
         self.ids.SSOF.text = "Sound:" + Sound
-        
+
+        Window.bind(on_keyboard = self.Android_back_click)
+
+    def Android_back_click(self, window, key, *largs):
+        if key == 27:
+            self.manager.current = 'M_'        
 
     def setaudio_OF(self):
         global Audio
@@ -264,17 +280,29 @@ class Select_Gun(Screen):
         self.liB = []
         
         for i in range(len(onlyfiles)):    
-            self.liB.append(Button(size_hint_y = None, size_hint_x = None,width =  Window.size[0]/8, height = Window.size[0]/8))
-            self.liB[-1].bind(on_press = self.change)
+            self.liB.append(Button(size_hint_y = None, size_hint_x = None,width =  Window.size[0]/8, height = Window.size[0]/8, on_press = self.Display))
+            #self.liB[-1].bind(pos = self.update_rect, size = self.update_rect)
             self.C_L.add_widget(self.liB[-1])
         self.cd = 1
 
+        Window.bind(on_keyboard = self.Android_back_click)
+
+
+    def Android_back_click(self, window, key, *largs):
+        if key == 27:
+            self.manager.current = 'M_'
+
+    def on_pre_enter(self):
+        self.LoadingAnim = Lding()
+        self.add_widget(self.LoadingAnim)
+
     def on_enter(self):
+        self.LoadingAnim.incbyoneone(20,0.1)
         if self.cd == 1:
             onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
             for j in range(len(self.liB)):
                 fname = self.mypath + onlyfiles[j]
-                img = Image(source = fname, keep_ratio = True, allow_stretch =True)
+                img = Image(source = fname, keep_ratio = True, allow_stretch = True)
                 self.liB[j].add_widget(img)
                 img.pos = self.liB[j].pos
                 img.size = self.liB[j].size[0]/2, self.liB[j].size[0]/2
@@ -282,16 +310,78 @@ class Select_Gun(Screen):
 
             self.ids.SV1.add_widget(self.C_L)
             self.cd  = 0
+        
+        #Displaying details of gun while entering
+        self.Display()
 
-    def change(self,_utk):
+        self.remove_widget(self.LoadingAnim)
+
+    def Display(self, *args):
         """
-            Event Binded with all Buttons get fired when button pressed
+            Details of Guns is Displayed
+        """
+
+        global Bullets
+
+        #Clearing Initial Display
+        self.ids.Prev_It.clear_widgets()
+
+        try:
+            Bullet_Name = args[0].children[0].source
+            if Bullets == Bullet_Name:
+                set_disable = True
+            else:
+                set_disable = False
+        except:
+            Bullet_Name = Bullets
+            set_disable = True
+
+        #Finding Bullet Info
+        data = open("./Data/Gun_Res.dat","r")
+        dline = data.read().split("\n")
+        fdata = ""
+
+        for i in range(1,len(dline)):
+            sline = dline[i].split(":")
+            if f"./Shoot/{sline[0]}" == Bullet_Name:
+                fdata = sline[1]
+                break
+        data.close()
+
+        fdata = fdata.split("-")
+
+        #Adding New Display
+        self.ids.Prev_It.add_widget(Label(text = fdata[0], font_name = "./Fonts/BadComic.ttf", font_size = 42))
+        self.ids.Prev_It.add_widget(Image(source = Bullet_Name, keep_ratio = True, allow_stretch = True))
+        Container = BoxLayout(orientation = "vertical")
+
+        Container.add_widget(Label(text = f"Damage = {fdata[1]}", font_name = "./Fonts/ComicShark.otf", font_size = 25))
+        Container.add_widget(Label(text = f"Ammo = {fdata[3]}", font_name = "./Fonts/ComicShark.otf", font_size = 25))
+        if fdata[5] == "L":
+            Container.add_widget(Label(text = f"Price = {fdata[6]}", font_name = "./Fonts/ComicShark.otf", font_size = 25))
+        self.ids.Prev_It.add_widget(Container)
+        self.selection = Bullet_Name
+
+        if fdata[5] == "UnL":
+            btn_eqp = Button(text = "Equip", on_press = self.change, size_hint = (1,0.5))
+            self.ids.Prev_It.add_widget(btn_eqp)
+            if set_disable:
+                btn_eqp.disabled = True
+                btn_eqp.text = "Equiped"
+        else:
+            self.ids.Prev_It.add_widget(Button(text = "Buy", size_hint = (1,0.5)))
+
+    def change(self, _utk):
+        """
+            Function Binded with "Equip" Button get fired when "Equip" button pressed
         """
         global Bullets
-        Bullets = _utk.children[0].source
-    
+        Bullets = self.selection
+        _utk.text = "Equiped"
+        _utk.disabled = True
 
     def on_leave(self):
+        self.ids.Prev_It.clear_widgets()
         update_User_Data()
 
         
@@ -305,12 +395,23 @@ class Select_Ship(Screen):
         onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
         self.liB = []
         for i in range(len(onlyfiles)):    
-            self.liB.append(Button(size_hint_y = None, size_hint_x = None, width =  Window.size[0]/8, height = Window.size[0]/8))
-            self.liB[-1].bind(on_press = self.change)
+            self.liB.append(Button(size_hint_y = None, size_hint_x = None, width =  Window.size[0]/8, height = Window.size[0]/8, on_press = self.Display))
+            #self.liB[-1].bind()
             self.C_L.add_widget(self.liB[-1])
         self.cd = 1
 
+        Window.bind(on_keyboard = self.Android_back_click)
+
+    def Android_back_click(self, window, key, *largs):
+        if key == 27:
+            self.manager.current = 'M_'
+
+    def on_pre_enter(self):
+        self.LoadingAnim = Lding()
+        self.add_widget(self.LoadingAnim)
+
     def on_enter(self):
+        self.LoadingAnim.incbyoneone(20,0.1)
         if self.cd == 1:
             onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
             for j in range(len(self.liB)):
@@ -323,7 +424,74 @@ class Select_Ship(Screen):
 
             self.ids.SV2.add_widget(self.C_L)
             self.cd  = 0
-    
+
+        self.Display()
+
+        self.remove_widget(self.LoadingAnim)
+
+    def Display(self, *args):
+        """
+            Details of Ships is Displayed
+        """
+
+        global Ship
+
+        #Clearing Initial Display
+        self.ids.Prev_It.clear_widgets()
+
+        try:
+            Ship_Name = args[0].children[0].source
+            if Ship == Ship_Name:
+                set_disable = True
+            else:
+                set_disable = False
+        except:
+            Ship_Name = Ship
+            set_disable = True
+
+        #Finding Bullet Info
+        data = open("./Data/Ship_Res.dat","r")
+        dline = data.read().split("\n")
+        fdata = ""
+
+        for i in range(1,len(dline)):
+            sline = dline[i].split(":")
+            if f"./Ship/{sline[0]}" == Ship_Name:
+                fdata = sline[1]
+                break
+        data.close()
+
+        fdata = fdata.split("-")
+
+        #Adding New Display
+        self.ids.Prev_It.add_widget(Label(text = fdata[0], font_name = "./Fonts/BadComic.ttf", font_size = 42))
+        self.ids.Prev_It.add_widget(Image(source = Ship_Name, keep_ratio = True, allow_stretch = True))
+        Container = BoxLayout(orientation = "vertical")
+
+        Container.add_widget(Label(text = f"Health = {fdata[1]}", font_name = "./Fonts/ComicShark.otf", font_size = 25))
+        if fdata[2] == "L":
+            Container.add_widget(Label(text = f"Price = {fdata[3]}", font_name = "./Fonts/ComicShark.otf", font_size = 25))
+        self.ids.Prev_It.add_widget(Container)
+        self.selection = Ship_Name
+
+        if fdata[2] == "UnL":
+            btn_eqp = Button(text = "Equip", on_press = self.change, size_hint = (1,0.5))
+            self.ids.Prev_It.add_widget(btn_eqp)
+            if set_disable:
+                btn_eqp.disabled = True
+                btn_eqp.text = "Equiped"
+        else:
+            self.ids.Prev_It.add_widget(Button(text = "Buy", size_hint = (1,0.5)))
+
+    def change(self, _utk):
+        """
+            Function Binded with "Equip" Button get fired when "Equip" button pressed
+        """
+        global Ship
+        Ship = self.selection
+        _utk.text = "Equiped"
+        _utk.disabled = True
+
     def change(self, _utk):
         """
             Event Binded with all Buttons get fired when button pressed
@@ -332,16 +500,29 @@ class Select_Ship(Screen):
         Ship = _utk.children[0].source
 
     def on_leave(self):
+        self.ids.Prev_It.clear_widgets()
         update_User_Data()
 
 class Game_Over(Screen):
     pass
 
 class Stats(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Window.bind(on_keyboard = self.Android_back_click)
+
+    def Android_back_click(self, window, key, *largs):
+        if key == 27:
+            self.manager.current = 'M_'
 
 class About(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Window.bind(on_keyboard = self.Android_back_click)
+
+    def Android_back_click(self, window, key, *largs):
+        if key == 27:
+            self.manager.current = 'M_'
 
 class GameMode(Screen):
     def __init__(self, **kwargs):
@@ -360,15 +541,32 @@ class GameMode(Screen):
         update_User_Data()
 
 class Club(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Window.bind(on_keyboard = self.Android_back_click)
+
+    def Android_back_click(self, window, key, *largs):
+        if key == 27:
+            self.manager.current = 'M_'
 
 class Friends(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Window.bind(on_keyboard = self.Android_back_click)
+
+    def Android_back_click(self, window, key, *largs):
+        if key == 27:
+            self.manager.current = 'M_'
 
 class History(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-    
+        Window.bind(on_keyboard = self.Android_back_click)
+
+    def Android_back_click(self, window, key, *largs):
+        if key == 27:
+            self.manager.current = 'M_'
+
     def on_pre_enter(self):
         #Adding Loading Widget
         self.Loading = Lding()
@@ -381,7 +579,7 @@ class History(Screen):
         #Adding Table Note-Size Control while resize needs to be added
         self.gd = GridLayout(cols = 5, size_hint = (None, None), size = self.ids.SV2.size)
         
-        with open('Replay_Data.dat', "rb") as rd:
+        with open('./Data/Replay_Data.dat', "rb") as rd:
             self.Data = rd.read()
         self.Data = self.Data.split(b"\r\n")
         while b"" in self.Data:
@@ -593,7 +791,7 @@ def update_User_Data():
         Called whenever user's game details changed by him.
     """
     global Audio, Ship, Bullets, Sound, MJSize, FJSize, setCSize, setJOri, GMode
-    UDW = open("User_Data.dat", "wb")
+    UDW = open("./Data/User_Data.dat", "wb")
     UDW.write(f'Ship|||{Ship}|||Bullets|||{Bullets}|||Audio|||{Audio}|||Sound|||{Sound}|||MJSize|||{MJSize}|||FJSize|||{FJSize}|||setCSize|||{setCSize}|||setJOri|||{setJOri}|||GMode|||{GMode}'.encode())
     UDW.close()
 
@@ -636,7 +834,7 @@ setJOri = ""
 GMode = ""
 
 #Load User Details(Lite)
-with open("User_Data.dat","rb") as User_Data:
+with open("./Data/User_Data.dat","rb") as User_Data:
     Data = User_Data.read().decode("ascii").split("|||")
 
     Ship = Data[1]
