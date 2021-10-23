@@ -443,16 +443,16 @@
                 text: "Duo"
                 on_press: root.change_mode(self.text)
             Button:
-                text: ""
+                text: "Club War"
                 on_press: root.change_mode(self.text)
             Button:
-                text: ""
+                text: "Squad Fight"
                 on_press: root.change_mode(self.text)
             Button:
-                text: ""
+                text: "1 vs 10"
                 on_press: root.change_mode(self.text)
             Button:
-                text: ""
+                text: "Random"
                 on_press: root.change_mode(self.text)
 
 <History>:
@@ -473,15 +473,15 @@
             BoxLayout:
                 orientation:"horizontal"
                 size_hint_y: 0.125
-                Button:
+                Label:
                     text:"Mode"
-                Button:
+                Label:
                     text:"Rank"
-                Button:
+                Label:
                     text:"Reward"
-                Button:
+                Label:
                     text:"Time"
-                Button:
+                Label:
                     text:"Replay"
             ScrollView:
                 id: SV2
@@ -498,6 +498,24 @@
         size_hint: (0.1,0.1)
         pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
         on_press: root.manager.current = 'M_'
+    FloatLayout:
+        BoxLayout:
+            orientation:"vertical"
+            size_hint: (0.7, 0.7)
+            pos_hint: {'x':0.15, 'y':0.15}
+            BoxLayout:
+                orientation:"horizontal"
+                size_hint: (1, 0.25)
+                Label:
+                    text:"Name"
+                Label:
+                    text:"Trophies"
+                Label:
+                    text:"Status"
+            ScrollView:
+                id: SV2
+                do_scroll_x: False
+                do_scroll_y: True
 
 <Club>:
     Label:
@@ -509,3 +527,39 @@
         size_hint: (0.1,0.1)
         pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
         on_press: root.manager.current = 'M_'
+    FloatLayout:
+        BoxLayout:
+            orientation:"vertical"
+            size_hint: (0.7, 0.7)
+            pos_hint: {'x':0.15, 'y':0.15}
+            BoxLayout:
+                orientation:"horizontal"
+                size_hint: (1, 0.125)
+                TextInput:
+                    id:sti
+                    hint_text: "Club Name or Club Code"
+                    multiline: False
+                    size_hint: (2,1)
+                    font_size: dp(20)
+                Button:
+                    text:"Search"
+            BoxLayout:
+                orientation:"horizontal"
+                size_hint: (1, 0.25)
+                Label:
+                    text: "Club Code"
+                Label:
+                    text:"Name"
+                Label:
+                    text:"Trophies"
+                Label:
+                    text:"Status"
+            ScrollView:
+                id: SV2
+                do_scroll_x: False
+                do_scroll_y: True
+        Button:
+            text: "Create Club"
+            size_hint: None,None
+            size: sti.size[0]/2,sti.size[1]
+            pos: root.size[0]/2 - self.size[0]/2,dp(20)

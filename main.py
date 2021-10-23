@@ -5,6 +5,7 @@ from os import listdir, path
 from os.path import isfile, join
 import socket
 
+from kivy.metrics import dp
 from kivy.animation import Animation
 from kivy.app import App
 from kivy.clock import Clock
@@ -351,14 +352,14 @@ class Select_Gun(Screen):
         fdata = fdata.split("-")
 
         #Adding New Display
-        self.ids.Prev_It.add_widget(Label(text = fdata[0], font_name = "./Fonts/BadComic.ttf", font_size = 42))
+        self.ids.Prev_It.add_widget(Label(text = fdata[0], font_name = "./Fonts/BadComic.ttf", font_size = dp(42)))
         self.ids.Prev_It.add_widget(Image(source = Bullet_Name, keep_ratio = True, allow_stretch = True))
         Container = BoxLayout(orientation = "vertical")
 
-        Container.add_widget(Label(text = f"Damage = {fdata[1]}", font_name = "./Fonts/ComicShark.otf", font_size = 25))
-        Container.add_widget(Label(text = f"Ammo = {fdata[3]}", font_name = "./Fonts/ComicShark.otf", font_size = 25))
+        Container.add_widget(Label(text = f"Damage = {fdata[1]}", font_name = "./Fonts/ComicShark.otf", font_size = dp(25)))
+        Container.add_widget(Label(text = f"Ammo = {fdata[3]}", font_name = "./Fonts/ComicShark.otf", font_size = dp(25)))
         if fdata[5] == "L":
-            Container.add_widget(Label(text = f"Price = {fdata[6]}", font_name = "./Fonts/ComicShark.otf", font_size = 25))
+            Container.add_widget(Label(text = f"Price = {fdata[6]}", font_name = "./Fonts/ComicShark.otf", font_size = dp(25)))
         self.ids.Prev_It.add_widget(Container)
         self.selection = Bullet_Name
 
@@ -464,13 +465,13 @@ class Select_Ship(Screen):
         fdata = fdata.split("-")
 
         #Adding New Display
-        self.ids.Prev_It.add_widget(Label(text = fdata[0], font_name = "./Fonts/BadComic.ttf", font_size = 42))
+        self.ids.Prev_It.add_widget(Label(text = fdata[0], font_name = "./Fonts/BadComic.ttf", font_size = dp(42)))
         self.ids.Prev_It.add_widget(Image(source = Ship_Name, keep_ratio = True, allow_stretch = True))
         Container = BoxLayout(orientation = "vertical")
 
-        Container.add_widget(Label(text = f"Health = {fdata[1]}", font_name = "./Fonts/ComicShark.otf", font_size = 25))
+        Container.add_widget(Label(text = f"Health = {fdata[1]}", font_name = "./Fonts/ComicShark.otf", font_size = dp(25)))
         if fdata[2] == "L":
-            Container.add_widget(Label(text = f"Price = {fdata[3]}", font_name = "./Fonts/ComicShark.otf", font_size = 25))
+            Container.add_widget(Label(text = f"Price = {fdata[3]}", font_name = "./Fonts/ComicShark.otf", font_size = dp(25)))
         self.ids.Prev_It.add_widget(Container)
         self.selection = Ship_Name
 
@@ -491,13 +492,6 @@ class Select_Ship(Screen):
         Ship = self.selection
         _utk.text = "Equiped"
         _utk.disabled = True
-
-    def change(self, _utk):
-        """
-            Event Binded with all Buttons get fired when button pressed
-        """
-        global Ship
-        Ship = _utk.children[0].source
 
     def on_leave(self):
         self.ids.Prev_It.clear_widgets()
@@ -548,15 +542,118 @@ class Club(Screen):
     def Android_back_click(self, window, key, *largs):
         if key == 27:
             self.manager.current = 'M_'
+    
+    def on_pre_enter(self):
+        #Adding Loading Widget
+        self.Loading = Lding()
+        self.add_widget(self.Loading)
+
+        #Starting Loading
+        self.Loading.incbyoneone(15,0.05)
+
+    def on_enter(self):
+        #Adding Table Note-Size Control while resize needs to be added
+        self.gd = GridLayout(cols = 4, size_hint = (None, None), size = self.ids.SV2.size)
+        
+        with open('./Data/Club_Data.dat', "rb") as rd:
+            self.Data = rd.read()
+        self.Data = self.Data.split(b"\r\n")
+        while b"" in self.Data:
+            self.Data.remove(b"")
+        self.cd = len(self.Data) - 1
+
+        self.Data = self.Data[1::]
+        
+        self.s = Clock.schedule_interval(self.load,0.001)
+    
+    def load(self, _utk):
+        #print(self.cd - len(self.Data) - 1)
+        if self.cd != 0:
+            DR = self.Data[self.cd - len(self.Data) - 1].decode()
+            DR = DR.split('|||')
+            self.gd.add_widget(Label(text = DR[0], size_hint= (None, None), size = (self.gd.size[0]/4, self.gd.size[1]/4)))
+            self.gd.add_widget(Label(text = DR[1], size_hint= (None, None), size = (self.gd.size[0]/4, self.gd.size[1]/4)))
+            self.gd.add_widget(Label(text = DR[2], size_hint= (None, None), size = (self.gd.size[0]/4, self.gd.size[1]/4)))
+            self.gd.add_widget(Label(text = DR[3], size_hint= (None, None), size = (self.gd.size[0]/4, self.gd.size[1]/4)))     
+            self.cd -= 1
+
+        if self.cd == 0:
+            self.Loading.incrementLoading(80)
+            self.ids.SV2.add_widget(self.gd)
+            self.gd.bind(minimum_height = self.gd.setter('height'))
+            #Loading Ended Removing Loading Widget
+            self.Loading.incrementLoading(100)
+            self.remove_widget(self.Loading)
+            self.s.cancel()
+
+    def on_leave(self):
+        self.gd.clear_widgets()
+        self.ids.SV2.clear_widgets()
 
 class Friends(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         Window.bind(on_keyboard = self.Android_back_click)
+        
 
     def Android_back_click(self, window, key, *largs):
         if key == 27:
             self.manager.current = 'M_'
+
+    def on_pre_enter(self):
+        #Adding Loading Widget
+        self.Loading = Lding()
+        self.add_widget(self.Loading)
+
+        #Starting Loading
+        self.Loading.incbyoneone(15,0.05)
+
+    def on_enter(self):
+        #Adding Table Note-Size Control while resize needs to be added
+        self.gd = GridLayout(cols = 3, size_hint = (None, None), size = self.ids.SV2.size)
+        
+        with open('./Data/Friends_Data.dat', "rb") as rd:
+            self.Data = rd.read()
+        self.Data = self.Data.split(b"\r\n")
+        while b"" in self.Data:
+            self.Data.remove(b"")
+        self.cd = len(self.Data) - 1
+
+        self.Data = self.Data[1::]
+        print(self.Data)
+        on = []
+        of = []
+        for i in range(len(self.Data)):
+            if self.Data[i].split(b"|||")[3] == b"Offline":
+                of.append(self.Data[i])
+            else:
+                on.append(self.Data[i])
+
+        self.Data = of+on
+
+        self.s = Clock.schedule_interval(self.load,0.001)
+    
+    def load(self, _utk):
+        #print(self.cd - len(self.Data) - 1)
+        if self.cd != 0:
+            DR = self.Data[self.cd - len(self.Data) - 1].decode()
+            DR = DR.split('|||')
+            self.gd.add_widget(Label(text = DR[1], size_hint= (None, None), size = (self.gd.size[0]/3, self.gd.size[1]/4)))
+            self.gd.add_widget(Label(text = DR[2], size_hint= (None, None), size = (self.gd.size[0]/3, self.gd.size[1]/4)))
+            self.gd.add_widget(Label(text = DR[3], size_hint= (None, None), size = (self.gd.size[0]/3, self.gd.size[1]/4)))
+            self.cd -= 1
+        if self.cd == 0:
+            self.Loading.incrementLoading(80)
+            self.ids.SV2.add_widget(self.gd)
+            self.gd.bind(minimum_height = self.gd.setter('height'))
+            #Loading Ended Removing Loading Widget
+            self.Loading.incrementLoading(100)
+            self.remove_widget(self.Loading)
+            self.s.cancel()
+
+    def on_leave(self):
+        self.gd.clear_widgets()
+        self.ids.SV2.clear_widgets()
 
 class History(Screen):
     def __init__(self, **kwargs):
