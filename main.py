@@ -233,7 +233,6 @@ class Menu(Screen):
         self.ids.A11.angle += 1
         if self.ids.A11.angle == 360:
             self.ids.A11.angle = 0
-    
            
 
 class Settings(Screen):
@@ -298,6 +297,8 @@ class Select_Gun(Screen):
         self.add_widget(self.LoadingAnim)
 
     def on_enter(self):
+        global Bullets
+        #print(Bullets)
         self.LoadingAnim.incbyoneone(20,0.1)
         if self.cd == 1:
             onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
@@ -305,6 +306,8 @@ class Select_Gun(Screen):
                 fname = self.mypath + onlyfiles[j]
                 img = Image(source = fname, keep_ratio = True, allow_stretch = True)
                 self.liB[j].add_widget(img)
+                if (Bullets == fname):
+                    self.liB[j].disabled = True
                 img.pos = self.liB[j].pos
                 img.size = self.liB[j].size[0]/2, self.liB[j].size[0]/2
                 img.center = self.liB[j].center
@@ -323,6 +326,16 @@ class Select_Gun(Screen):
         """
 
         global Bullets
+
+        #Enabling Previous one
+        for i in range(len(self.liB)):
+            if (self.liB[i].disabled == True) and (args != ()):
+                self.liB[i].disabled = False
+                break
+
+        #Disabling Current One
+        if (args != ()):
+            args[0].disabled = True
 
         #Clearing Initial Display
         self.ids.Prev_It.clear_widgets()
@@ -412,6 +425,7 @@ class Select_Ship(Screen):
         self.add_widget(self.LoadingAnim)
 
     def on_enter(self):
+        global Ship
         self.LoadingAnim.incbyoneone(20,0.1)
         if self.cd == 1:
             onlyfiles = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f))]
@@ -419,6 +433,8 @@ class Select_Ship(Screen):
                 fname = self.mypath + onlyfiles[j]
                 img = Image(source = fname, keep_ratio = True, allow_stretch =True)
                 self.liB[j].add_widget(img)
+                if (Ship == fname):
+                    self.liB[j].disabled = True
                 img.pos = self.liB[j].pos
                 img.size = self.liB[j].size[0]/2, self.liB[j].size[0]/2
                 img.center = self.liB[j].center
@@ -436,6 +452,16 @@ class Select_Ship(Screen):
         """
 
         global Ship
+
+        #Enabling Previous one
+        for i in range(len(self.liB)):
+            if (self.liB[i].disabled == True) and (args != ()):
+                self.liB[i].disabled = False
+                break
+
+        #Disabling Current One
+        if (args != ()):
+            args[0].disabled = True
 
         #Clearing Initial Display
         self.ids.Prev_It.clear_widgets()
@@ -508,6 +534,31 @@ class Stats(Screen):
     def Android_back_click(self, window, key, *largs):
         if key == 27:
             self.manager.current = 'M_'
+    
+    def on_pre_enter(self):
+        self.Loading = Lding()
+        self.add_widget(self.Loading)
+        self.Loading.incbyoneone(15,0.05)
+    
+    def on_enter(self):
+        with open("./Data/Player_Stats.dat", "rb") as pdata:
+            pfdata = pdata.read()
+
+        pfdata = pfdata.decode()
+        pfdata = pfdata.split("\r\n")
+
+        self.ids.res_d.add_widget(Label(text=pfdata[0]))
+        self.ids.res_d.add_widget(Label(text=pfdata[1]))
+        self.ids.res_d.add_widget(Label(text=pfdata[2]))
+        self.ids.res_d.add_widget(Label(text=pfdata[3]))
+        self.ids.res_d.add_widget(Label(text=pfdata[4]))
+        self.ids.res_d.add_widget(Label(text=pfdata[5]))
+        self.ids.res_d.add_widget(Label(text=pfdata[6]))
+        self.Loading.incrementLoading(100)
+        self.remove_widget(self.Loading)
+
+    def on_leave(self):
+        self.ids.res_d.clear_widgets()
 
 class About(Screen):
     def __init__(self, **kwargs):
@@ -805,6 +856,14 @@ class CUpdate(Screen):
         else:
             update_User_Data()
 
+class FeedBack(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Window.bind(on_keyboard = self.Android_back_click)
+
+    def Android_back_click(self, window, key, *largs):
+        if key == 27:
+            self.manager.current = 'M_'
 
 #Loading Widget
 class Lding(Widget):
@@ -909,7 +968,8 @@ class TestApp(App):
         sm.add_widget(Friends(name = 'F_S'))
         sm.add_widget(History(name = 'HIS'))
         sm.add_widget(CUpdate(name = 'CUP'))
-        
+        sm.add_widget(FeedBack(name = 'FDB'))
+
         return sm  
 
 #used for collecting garbage bullets that goes out of screen

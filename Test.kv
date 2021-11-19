@@ -146,13 +146,82 @@
         Button:
             text:"Astro123"
             size: BI1.size[1],BI1.size[1]
+            on_press: root.manager.current = 'STAT'
+
+    BoxLayout:
+        orientation:"horizontal"
+        size_hint: (0.5, 0.05)
+        pos: root.size[0]/2, root.size[1] - self.size[1] - dp(10)  
+        
+        Button:
+            id:RC1
+            background_normal: ""
+            background_color: (1,1,1,0)
+            Image:
+                source: "./Item/Gem1.gif"
+                size: self.parent.size
+                allow_stretch: True
+                keep_ratio: True
+                center: self.parent.center
+                anim_delay: -1
+        Label:
+            id:gem1
+            text: "1200"
+            font_size: dp(20)
+        
+        Button:
+            id:RC2
+            background_normal: ""
+            background_color: (1,1,1,0)
+            Image:
+                source: "./Item/Gem2.gif"
+                size: self.parent.size
+                allow_stretch: True
+                keep_ratio: True
+                center: self.parent.center
+                anim_delay: -1
+        Label:
+            id: gem2
+            text: "1200"
+            font_size: dp(20)
+
+        Button:
+            id:RC3
+            background_normal: ""
+            background_color: (1,1,1,0)
+            Image:
+                source: "./Item/Gem3.gif"
+                size: self.parent.size
+                allow_stretch: True
+                keep_ratio: True
+                center: self.parent.center
+                anim_delay: -1
+        Label:
+            id: gem3
+            text: "1200"
+            font_size: dp(20)
+
+        Button:
+            id:RC4
+            background_normal: ""
+            background_color: (1,1,1,0)
+            Image:
+                source: "./Item/Gem4.gif"
+                size: self.parent.size
+                allow_stretch: True
+                keep_ratio: True
+                center: self.parent.center
+                anim_delay: -1
+        Label:
+            id: gem4
+            text: "1200"
+            font_size: dp(20)
 
     BoxLayout:
         orientation:"horizontal"
         BoxLayout:
             orientation:"vertical"
             Label:
-                
                 
             Button:
                 text:"Bullets"
@@ -291,7 +360,7 @@
         text:"<-"
         size_hint: (0.1,0.1)
         pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
-        on_press: root.manager.current = 'M_'
+        on_press: root.manager.current = 'S_'
 
 <Stats>:
     Label:
@@ -304,6 +373,38 @@
         size_hint: (0.1,0.1)
         pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
         on_press: root.manager.current = 'M_'
+    FloatLayout:
+        BoxLayout:
+            orientation:"vertical"
+            size_hint: (0.6, 0.8)
+            pos_hint: {'x':0.2, 'y':0.1}
+            Widget:
+                size_hint:(1,0.5)
+                Image:
+                    center:self.parent.center
+            BoxLayout:
+                orientation:"horizontal"
+                BoxLayout:
+                    orientation:"vertical"
+                    Label:
+                        text:"ID"
+                    Label:
+                        text:"Name"
+                    Label:
+                        text:"Club"
+                    Label:
+                        text:"XP"
+                    Label:
+                        text:"Total Kills"
+                    Label:
+                        text:"Match Played"
+                    Label:
+                        text:"Match Won"
+                BoxLayout:
+                    id:res_d
+                    orientation:"vertical"
+
+
 
 <Settings>:
     Label:
@@ -341,8 +442,10 @@
                 on_press: root.manager.current = 'CUP'
             Button:
                 text: "Feedback"
+                on_press: root.manager.current = 'FDB'
             Button:
                 text: "About"
+                on_press: root.manager.current = 'ABT_'
 
 <CUpdate>:
     Label:
@@ -563,3 +666,69 @@
             size_hint: None,None
             size: sti.size[0]/2,sti.size[1]
             pos: root.size[0]/2 - self.size[0]/2,dp(20)
+
+<FeedBack>:
+    Label:
+        id: Set_
+        text: "Feedback"
+        size_hint: (1, 0.1)
+        pos: (0,root.size[1]-self.size[1])
+    Button:
+        text:"<-"
+        size_hint: (0.1,0.1)
+        pos: (root.size[0] - self.size[0], root.size[1]-self.size[1])
+        on_press: root.manager.current = 'S_'
+    FloatLayout:
+        id: fls
+        pos_hint: {'x':0.1, 'y':0.15}
+        size_hint: 0.8, 0.7
+        canvas:
+            Color:
+                rgba: 0.8, 0.2, 0.3, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        BoxLayout:
+            pos_hint: {'x':0.1, 'y':0.1}
+            size_hint: 0.8, 0.8
+            orientation:"vertical"
+            BackgroundLabel:
+                background_color: 1,1,0,1
+                size_hint: 1, 0.3
+                text: "Feedback Form"
+                font_size: dp(25)
+            TextInput:
+                size_hint:(1, 0.180)
+                multiline: False
+                font_size: dp(20)
+            TextInput:
+                multiline: True
+                font_size: dp(18)
+            
+            BoxLayout:
+                orientation:"horizontal"
+                size_hint: (1, 0.25)
+                Button:
+                    text:"Add a file"
+                    size_hint: (0.5, 1)
+                BackgroundLabel:
+                    background_color: 1,1,0,1
+                    text:""
+    Button:
+        text:"Submit"
+        size_hint: (.125, .1)
+        pos: (root.size[0]/2 - self.size[0]/2, fls.pos[1] - self.size[1]*5/4)
+
+
+<BackgroundColor@Widget>
+    background_color: 1, 1, 1, 1
+    canvas.before:
+        Color:
+            rgba: root.background_color
+        Rectangle:
+            size: self.size
+            pos: self.pos
+# Now you can simply Mix the `BackgroundColor` class with almost
+# any other widget... to give it a background.
+<BackgroundLabel@Label+BackgroundColor>
+    background_color: 0, 0, 0, 0
